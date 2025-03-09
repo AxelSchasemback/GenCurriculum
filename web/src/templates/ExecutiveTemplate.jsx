@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
 // Estilos para el PDF
 const styles = StyleSheet.create({
@@ -9,26 +9,35 @@ const styles = StyleSheet.create({
     padding: 30,
   },
   header: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#0F172A', // Azul muy oscuro
-    paddingBottom: 15,
     marginBottom: 20,
+    borderBottom: '2 solid #333333',
+    paddingBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerLeft: {
-    width: '60%',
+    flex: 1,
   },
-  headerRight: {
-    width: '40%',
-    textAlign: 'right',
+  photoContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    objectPosition: 'center',
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#0F172A', // Azul muy oscuro
+    marginBottom: 5,
     textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   title: {
     fontSize: 14,
@@ -133,91 +142,118 @@ const styles = StyleSheet.create({
 });
 
 // Componente para el PDF
-const ExecutiveTemplate = ({ data }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      {/* Encabezado con información personal */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.name}>{data.personalInfo.name || 'Nombre Completo'}</Text>
-          <Text style={styles.title}>{data.personalInfo.title || 'Título Profesional'}</Text>
+const ExecutiveTemplate = ({ data }) => {
+  console.log("ExecutiveTemplate recibió datos:", data);
+  console.log("Foto en ExecutiveTemplate:", data.personalInfo.photo);
+  
+  // Verificar si la foto es una URL base64 válida
+  const hasValidPhoto = data.personalInfo.photo && 
+    (data.personalInfo.photo.startsWith('data:image/') || 
+     data.personalInfo.photo.startsWith('http'));
+  
+  // Crear una imagen con dimensiones fijas para evitar problemas de renderizado
+  const processedPhoto = hasValidPhoto ? data.personalInfo.photo : null;
+  
+  console.log("¿Tiene foto válida?", hasValidPhoto);
+  console.log("Foto procesada:", processedPhoto ? "Sí" : "No");
+  
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Encabezado con información personal */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.name}>{data.personalInfo.name || 'Nombre Completo'}</Text>
+            <Text style={styles.title}>{data.personalInfo.title || 'Título Profesional'}</Text>
+            
+            <View style={styles.contactInfo}>
+              {data.personalInfo.email && (
+                <Text style={styles.contactInfo}>{data.personalInfo.email}</Text>
+              )}
+              {data.personalInfo.phone && (
+                <Text style={styles.contactInfo}>{data.personalInfo.phone}</Text>
+              )}
+              {data.personalInfo.location && (
+                <Text style={styles.contactInfo}>{data.personalInfo.location}</Text>
+              )}
+              {data.personalInfo.website && (
+                <Text style={styles.contactInfo}>{data.personalInfo.website}</Text>
+              )}
+            </View>
+          </View>
+          
+          {processedPhoto && (
+            <View style={styles.photoContainer}>
+              <Image 
+                src={processedPhoto} 
+                style={styles.photo} 
+                cache={false}
+              />
+            </View>
+          )}
         </View>
-        <View style={styles.headerRight}>
-          {data.personalInfo.email && (
-            <Text style={styles.contactInfo}>{data.personalInfo.email}</Text>
-          )}
-          {data.personalInfo.phone && (
-            <Text style={styles.contactInfo}>{data.personalInfo.phone}</Text>
-          )}
-          {data.personalInfo.location && (
-            <Text style={styles.contactInfo}>{data.personalInfo.location}</Text>
-          )}
-          {data.personalInfo.website && (
-            <Text style={styles.contactInfo}>{data.personalInfo.website}</Text>
-          )}
-        </View>
-      </View>
 
-      {/* Perfil Profesional */}
-      {data.personalInfo.summary && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Perfil Profesional</Text>
-          <Text style={styles.summary}>{data.personalInfo.summary}</Text>
-        </View>
-      )}
+        {/* Perfil Profesional */}
+        {data.personalInfo.summary && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Perfil Profesional</Text>
+            <Text style={styles.summary}>{data.personalInfo.summary}</Text>
+          </View>
+        )}
 
-      {/* Sección de Experiencia */}
-      {data.experience.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Experiencia Profesional</Text>
-          {data.experience.map((exp, index) => (
-            <View key={index} style={styles.experienceItem}>
-              <View style={styles.experienceHeader}>
-                <Text style={styles.jobTitle}>{exp.position}</Text>
-                <Text style={styles.jobPeriod}>{exp.startDate} - {exp.endDate || 'Presente'}</Text>
+        {/* Sección de Experiencia */}
+        {data.experience.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Experiencia Profesional</Text>
+            {data.experience.map((exp, index) => (
+              <View key={index} style={styles.experienceItem}>
+                <View style={styles.experienceHeader}>
+                  <Text style={styles.jobTitle}>{exp.position}</Text>
+                  <Text style={styles.jobPeriod}>{exp.startDate} - {exp.endDate || 'Presente'}</Text>
+                </View>
+                <Text style={styles.company}>{exp.company}</Text>
+                <Text style={styles.description}>{exp.description}</Text>
               </View>
-              <Text style={styles.company}>{exp.company}</Text>
-              <Text style={styles.description}>{exp.description}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* Sección de Educación */}
-      {data.education.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Formación Académica</Text>
-          {data.education.map((edu, index) => (
-            <View key={index} style={styles.educationItem}>
-              <Text style={styles.degree}>{edu.degree}</Text>
-              <Text style={styles.institution}>{edu.institution}</Text>
-              <Text style={styles.educationPeriod}>{edu.startDate} - {edu.endDate || 'Presente'}</Text>
-              {edu.description && <Text style={styles.description}>{edu.description}</Text>}
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* Sección de Habilidades */}
-      {data.skills.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Competencias</Text>
-          <View style={styles.skills}>
-            {data.skills.map((skill, index) => (
-              <Text key={index} style={styles.skill}>
-                {skill}
-              </Text>
             ))}
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Pie de página */}
-      <View style={styles.footer}>
-        <Text>Currículum actualizado a {new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}</Text>
-      </View>
-    </Page>
-  </Document>
-);
+        {/* Sección de Educación */}
+        {data.education.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Formación Académica</Text>
+            {data.education.map((edu, index) => (
+              <View key={index} style={styles.educationItem}>
+                <Text style={styles.degree}>{edu.degree}</Text>
+                <Text style={styles.institution}>{edu.institution}</Text>
+                <Text style={styles.educationPeriod}>{edu.startDate} - {edu.endDate || 'Presente'}</Text>
+                {edu.description && <Text style={styles.description}>{edu.description}</Text>}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Sección de Habilidades */}
+        {data.skills.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Competencias</Text>
+            <View style={styles.skills}>
+              {data.skills.map((skill, index) => (
+                <Text key={index} style={styles.skill}>
+                  {skill}
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Pie de página */}
+        <View style={styles.footer}>
+          <Text>Currículum actualizado a {new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}</Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
 
 export default ExecutiveTemplate; 

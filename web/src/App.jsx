@@ -13,6 +13,7 @@ import ResumeBuilder from './pages/ResumeBuilder';
 import TemplateGallery from './pages/TemplateGallery';
 import TemplatePreview from './pages/TemplatePreview';
 import TemplateScreenshotGenerator from './components/TemplateScreenshotGenerator';
+import ImportCV from './pages/ImportCV';
 
 // Componentes
 import Header from './components/Header';
@@ -102,6 +103,7 @@ function App() {
             <Route path="/templates" element={<TemplateGallery />} />
             <Route path="/preview/:templateId" element={<TemplatePreview />} />
             <Route path="/admin/screenshot-generator" element={<TemplateScreenshotGenerator />} />
+            <Route path="/import-cv" element={<ImportCV />} />
           </Routes>
         </main>
         <Footer />

@@ -1,0 +1,118 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import ModernTemplate from '../templates/ModernTemplate';
+import MinimalistTemplate from '../templates/MinimalistTemplate';
+import CreativeTemplate from '../templates/CreativeTemplate';
+import ExecutiveTemplate from '../templates/ExecutiveTemplate';
+import ChronologicalTemplate from '../templates/ChronologicalTemplate';
+import TwoColumnTemplate from '../templates/TwoColumnTemplate';
+import { getAllTemplates } from '../utils/templateMapping';
+
+// Componente temporal para la vista previa del PDF
+const PDFPreview = ({ data, templateId }) => {
+  // Renderiza una versión simplificada basada en la plantilla seleccionada
+  const renderPreviewByTemplate = () => {
+    switch(templateId) {
+      case 'modern':
+        return (
+          <div className="modern-preview">
+            <h1 className="text-2xl font-bold text-center">{data.personalInfo.name || 'Nombre Completo'}</h1>
+            <p className="text-center text-gray-600">{data.personalInfo.title || 'Título Profesional'}</p>
+            <div className="flex justify-center gap-4 mt-2 text-sm">
+              <p>{data.personalInfo.email || 'email@ejemplo.com'}</p>
+              <p>{data.personalInfo.phone || '(123) 456-7890'}</p>
+              <p>{data.personalInfo.location || 'Ciudad, País'}</p>
+            </div>
+            <hr className="my-4" />
+            {data.personalInfo.summary && (
+              <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Perfil Profesional</h2>
+                <pre className="whitespace-pre-wrap text-sm font-sans">{data.personalInfo.summary}</pre>
+              </div>
+            )}
+            <div className="mt-4">
+              <h2 className="text-xl font-bold mb-2">Experiencia</h2>
+              {data.experience.length > 0 ? (
+                data.experience.map((exp, index) => (
+                  <div key={index} className="mb-4">
+                    <div className="flex justify-between">
+                      <h3 className="font-bold">{exp.position}</h3>
+                      <p className="text-sm">{exp.startDate} - {exp.endDate}</p>
+                    </div>
+                    <p className="text-gray-600">{exp.company}, {exp.location}</p>
+                    <p className="text-sm mt-1">{exp.description}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">Agrega tu experiencia laboral</p>
+              )}
+            </div>
+            <div className="mt-4">
+              <h2 className="text-xl font-bold mb-2">Educación</h2>
+              {data.education.length > 0 ? (
+                data.education.map((edu, index) => (
+                  <div key={index} className="mb-4">
+                    <div className="flex justify-between">
+                      <h3 className="font-bold">{edu.degree}</h3>
+                      <p className="text-sm">{edu.startDate} - {edu.endDate}</p>
+                    </div>
+                    <p className="text-gray-600">{edu.institution}, {edu.location}</p>
+                    <p className="text-sm mt-1">{edu.description}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">Agrega tu información educativa</p>
+              )}
+            </div>
+            <div className="mt-4">
+              <h2 className="text-xl font-bold mb-2">Habilidades</h2>
+              {data.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {data.skills.map((skill, index) => (
+                    <span key={index} className="bg-gray-200 px-3 py-1 rounded-full text-sm">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">Agrega tus habilidades</p>
+              )}
+            </div>
+          </div>
+        );
+      // Resto de casos para otras plantillas...
+      default:
+        return (
+          <div className="default-preview">
+            <h1 className="text-2xl font-bold">{data.personalInfo.name || 'Nombre Completo'}</h1>
+            <p className="text-gray-600">{data.personalInfo.title || 'Título Profesional'}</p>
+            {data.personalInfo.summary && (
+              <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Perfil Profesional</h2>
+                <pre className="whitespace-pre-wrap text-sm font-sans">{data.personalInfo.summary}</pre>
+              </div>
+            )}
+            <div className="mt-4">
+              <h2 className="text-xl font-bold mb-2">Experiencia</h2>
+              {/* Contenido de experiencia */}
+            </div>
+            <div className="mt-4">
+              <h2 className="text-xl font-bold mb-2">Educación</h2>
+              {/* Contenido de educación */}
+            </div>
+            <div className="mt-4">
+              <h2 className="text-xl font-bold mb-2">Habilidades</h2>
+              {/* Contenido de habilidades */}
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="bg-white p-8 shadow-lg rounded-lg">
+      {renderPreviewByTemplate()}
+    </div>
+  );
+}; 

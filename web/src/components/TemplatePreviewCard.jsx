@@ -5,9 +5,10 @@ import DefaultTemplateImage from './DefaultTemplateImage';
 /**
  * Componente que muestra una tarjeta de vista previa para una plantilla de CV
  * Utiliza DefaultTemplateImage para mostrar una representación visual de la plantilla
- * @param {Object} template - Objeto con la información de la plantilla
- * @param {string} profileType - Tipo de perfil para mostrar (developer, marketing, etc.)
- * @param {Function} onSelect - Función opcional que se llama al seleccionar la plantilla
+ * @param {Object} props - Propiedades del componente
+ * @param {Object} props.template - Objeto con la información de la plantilla
+ * @param {string} props.profileType - Tipo de perfil para mostrar (developer, marketing, etc.)
+ * @param {Function} props.onSelect - Función opcional que se llama al seleccionar la plantilla
  */
 const TemplatePreviewCard = ({ template, profileType = 'developer', onSelect = null }) => {
   const { id, name, description, premium } = template;
@@ -52,6 +53,16 @@ const TemplatePreviewCard = ({ template, profileType = 'developer', onSelect = n
             <Link
               to={`/builder?template=${id}`}
               className="flex-1 py-2 px-4 bg-primary-600 text-white rounded-md text-sm font-medium text-center hover:bg-primary-700 transition-colors"
+              onClick={() => {
+                // Verificar si hay datos guardados temporalmente
+                const tempData = localStorage.getItem('tempResumeData');
+                if (tempData) {
+                  // Si hay datos, guardarlos con un nombre diferente para que el constructor los cargue
+                  localStorage.setItem('resumeData', tempData);
+                  // Limpiar los datos temporales
+                  localStorage.removeItem('tempResumeData');
+                }
+              }}
             >
               Usar plantilla
             </Link>

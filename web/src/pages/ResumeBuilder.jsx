@@ -17,14 +17,31 @@ const PDFPreview = ({ data, templateId }) => {
       case 'modern':
         return (
           <div className="modern-preview">
-            <h1 className="text-2xl font-bold text-center">{data.personalInfo.name || 'Nombre Completo'}</h1>
-            <p className="text-center text-gray-600">{data.personalInfo.title || 'Título Profesional'}</p>
-            <div className="flex justify-center gap-4 mt-2 text-sm">
-              <p>{data.personalInfo.email || 'email@ejemplo.com'}</p>
-              <p>{data.personalInfo.phone || '(123) 456-7890'}</p>
-              <p>{data.personalInfo.location || 'Ciudad, País'}</p>
+            <div className="flex flex-col items-center">
+              {data.personalInfo.photo && (
+                <div className="w-24 h-24 rounded-full overflow-hidden mb-3 border border-gray-300">
+                  <img 
+                    src={data.personalInfo.photo} 
+                    alt="Foto de perfil" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <h1 className="text-2xl font-bold text-center">{data.personalInfo.name || 'Nombre Completo'}</h1>
+              <p className="text-center text-gray-600">{data.personalInfo.title || 'Título Profesional'}</p>
+              <div className="flex justify-center gap-4 mt-2 text-sm">
+                <p>{data.personalInfo.email || 'email@ejemplo.com'}</p>
+                <p>{data.personalInfo.phone || '(123) 456-7890'}</p>
+                <p>{data.personalInfo.location || 'Ciudad, País'}</p>
+              </div>
             </div>
             <hr className="my-4" />
+            {data.personalInfo.summary && (
+              <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Perfil Profesional</h2>
+                <pre className="whitespace-pre-wrap text-sm font-sans">{data.personalInfo.summary}</pre>
+              </div>
+            )}
             <div className="mt-4">
               <h2 className="text-xl font-bold mb-2">Experiencia</h2>
               {data.experience.length > 0 ? (
@@ -423,6 +440,19 @@ const ResumeBuilder = () => {
     // Encontrar la plantilla seleccionada
     const selected = getAllTemplates().find(t => t.id === templateId) || getAllTemplates()[0];
     setSelectedTemplate(selected);
+    
+    // Cargar datos del localStorage si están disponibles
+    const savedResumeData = localStorage.getItem('resumeData');
+    if (savedResumeData) {
+      try {
+        const parsedData = JSON.parse(savedResumeData);
+        setResumeData(parsedData);
+        // Limpiar localStorage después de cargar los datos
+        localStorage.removeItem('resumeData');
+      } catch (error) {
+        console.error('Error al cargar los datos guardados:', error);
+      }
+    }
   }, [templateId]);
 
   const [resumeData, setResumeData] = useState({
@@ -433,6 +463,7 @@ const ResumeBuilder = () => {
       phone: '',
       location: '',
       summary: '',
+      photo: '',
     },
     experience: [],
     education: [],
@@ -460,6 +491,65 @@ const ResumeBuilder = () => {
     description: '',
   });
   const [newSkill, setNewSkill] = useState('');
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log("Archivo seleccionado:", file);
+      
+      // Verificar que el archivo es una imagen
+      if (!file.type.startsWith('image/')) {
+        console.error("El archivo seleccionado no es una imagen");
+        return;
+      }
+      
+      // Crear una URL para la imagen
+      const imageUrl = URL.createObjectURL(file);
+      console.log("URL de la imagen creada:", imageUrl);
+      
+      // Cargar la imagen para asegurarnos de que se carga correctamente
+      const img = new Image();
+      img.onload = () => {
+        console.log("Imagen cargada correctamente, dimensiones:", img.width, "x", img.height);
+        
+        // Crear un canvas para convertir la imagen a base64
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Establecer las dimensiones del canvas
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Dibujar la imagen en el canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Convertir el canvas a base64
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          console.log("Base64 generado correctamente");
+          
+          // Actualizar el estado con la imagen
+          setResumeData({
+            ...resumeData,
+            personalInfo: {
+              ...resumeData.personalInfo,
+              photo: dataUrl,
+            },
+          });
+          
+          console.log("Estado actualizado con la imagen");
+        } catch (error) {
+          console.error("Error al convertir la imagen a base64:", error);
+        }
+      };
+      
+      img.onerror = (error) => {
+        console.error("Error al cargar la imagen:", error);
+      };
+      
+      img.src = imageUrl;
+    }
+  };
 
   const handlePersonalInfoChange = (e) => {
     const { name, value } = e.target;
@@ -545,6 +635,9 @@ const ResumeBuilder = () => {
 
   // Función para seleccionar la plantilla según el ID
   const getResumeTemplate = () => {
+    console.log("Datos del CV para PDF:", resumeData); // Añadir log para depuración
+    console.log("Foto:", resumeData.personalInfo.photo); // Verificar si la foto está presente
+    
     switch(templateId) {
       case 'modern':
         return <ModernTemplate data={resumeData} />;
@@ -575,14 +668,21 @@ const ResumeBuilder = () => {
               <p className="text-blue-800">
                 <span className="font-semibold">Plantilla seleccionada:</span> {selectedTemplate.name}
               </p>
-              <p className="text-blue-600 text-sm">{selectedTemplate.description}</p>
+              <div className="text-blue-600 text-sm">{selectedTemplate.description}</div>
             </div>
-            <Link 
-              to="/templates" 
-              className="bg-white text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            <div 
+              onClick={() => {
+                // Guardar los datos actuales en localStorage antes de cambiar de plantilla
+                localStorage.setItem('tempResumeData', JSON.stringify(resumeData));
+              }}
             >
-              Cambiar plantilla
-            </Link>
+              <Link 
+                to="/templates" 
+                className="bg-white text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Cambiar plantilla
+              </Link>
+            </div>
           </div>
         </div>
       )}
@@ -633,6 +733,26 @@ const ResumeBuilder = () => {
                       className="w-full px-3 py-2 border rounded-md"
                       placeholder="Ej. Juan Pérez"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 mb-2">Foto de Perfil</label>
+                    <div className="flex items-center space-x-4">
+                      {resumeData.personalInfo.photo && (
+                        <div className="w-24 h-24 rounded-full overflow-hidden mb-3 border border-gray-300">
+                          <img 
+                            src={resumeData.personalInfo.photo} 
+                            alt="Foto de perfil" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-gray-700 mb-2">Título Profesional</label>
@@ -686,7 +806,7 @@ const ResumeBuilder = () => {
                       value={resumeData.personalInfo.summary}
                       onChange={handlePersonalInfoChange}
                       className="w-full px-3 py-2 border rounded-md"
-                      rows={4}
+                      rows={10}
                       placeholder="Breve descripción de tu perfil profesional..."
                     ></textarea>
                   </div>

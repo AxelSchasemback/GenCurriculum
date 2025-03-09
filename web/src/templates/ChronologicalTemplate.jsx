@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
 // Estilos para el PDF
 const styles = StyleSheet.create({
@@ -11,14 +11,27 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#112240',
+    borderBottom: '1 solid #DDDDDD',
     paddingBottom: 10,
-  },
-  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+  },
+  headerContent: {
+    flex: 1,
+  },
+  photoContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    overflow: 'hidden',
+    marginLeft: 10,
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    objectPosition: 'center',
   },
   nameTitle: {
     width: '60%',
@@ -150,106 +163,131 @@ const styles = StyleSheet.create({
 });
 
 // Componente para el PDF
-const ChronologicalTemplate = ({ data }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      {/* Encabezado con información personal */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.nameTitle}>
+const ChronologicalTemplate = ({ data }) => {
+  console.log("ChronologicalTemplate recibió datos:", data);
+  console.log("Foto en ChronologicalTemplate:", data.personalInfo.photo);
+  
+  // Verificar si la foto es una URL base64 válida
+  const hasValidPhoto = data.personalInfo.photo && 
+    (data.personalInfo.photo.startsWith('data:image/') || 
+     data.personalInfo.photo.startsWith('http'));
+  
+  // Crear una imagen con dimensiones fijas para evitar problemas de renderizado
+  const processedPhoto = hasValidPhoto ? data.personalInfo.photo : null;
+  
+  console.log("¿Tiene foto válida?", hasValidPhoto);
+  console.log("Foto procesada:", processedPhoto ? "Sí" : "No");
+  
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Encabezado con información personal */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
             <Text style={styles.name}>{data.personalInfo.name || 'Nombre Completo'}</Text>
             <Text style={styles.title}>{data.personalInfo.title || 'Título Profesional'}</Text>
-          </View>
-          <View style={styles.contactInfo}>
-            {data.personalInfo.email && (
-              <Text style={styles.contactItem}>{data.personalInfo.email}</Text>
-            )}
-            {data.personalInfo.phone && (
-              <Text style={styles.contactItem}>{data.personalInfo.phone}</Text>
-            )}
-            {data.personalInfo.location && (
-              <Text style={styles.contactItem}>{data.personalInfo.location}</Text>
-            )}
-            {data.personalInfo.website && (
-              <Text style={styles.contactItem}>{data.personalInfo.website}</Text>
-            )}
-          </View>
-        </View>
-      </View>
-
-      {/* Perfil Profesional */}
-      {data.personalInfo.summary && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Perfil Profesional</Text>
-          <Text style={styles.summary}>{data.personalInfo.summary}</Text>
-        </View>
-      )}
-
-      {/* Sección de Experiencia */}
-      {data.experience && data.experience.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Experiencia Profesional</Text>
-          {data.experience.map((exp, index) => (
-            <View key={index} style={styles.experienceItem}>
-              <View style={styles.experienceHeader}>
-                <Text style={styles.jobTitle}>{exp.position}</Text>
-                <Text style={styles.jobPeriod}>{exp.startDate} - {exp.endDate || 'Presente'}</Text>
-              </View>
-              <Text style={styles.company}>{exp.company}{exp.location ? `, ${exp.location}` : ''}</Text>
-              
-              {exp.description && (
-                <View style={styles.bulletContainer}>
-                  <View style={styles.bulletPoint} />
-                  <Text style={styles.description}>{exp.description}</Text>
-                </View>
+            
+            <View style={styles.contactInfo}>
+              {data.personalInfo.email && (
+                <Text style={styles.contactItem}>{data.personalInfo.email}</Text>
+              )}
+              {data.personalInfo.phone && (
+                <Text style={styles.contactItem}>{data.personalInfo.phone}</Text>
+              )}
+              {data.personalInfo.location && (
+                <Text style={styles.contactItem}>{data.personalInfo.location}</Text>
+              )}
+              {data.personalInfo.website && (
+                <Text style={styles.contactItem}>{data.personalInfo.website}</Text>
               )}
             </View>
-          ))}
-        </View>
-      )}
-
-      {/* Sección de Educación */}
-      {data.education && data.education.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Formación Académica</Text>
-          {data.education.map((edu, index) => (
-            <View key={index} style={styles.educationItem}>
-              <View style={styles.experienceHeader}>
-                <Text style={styles.degree}>{edu.degree}</Text>
-                <Text style={styles.educationPeriod}>{edu.startDate} - {edu.endDate || 'Presente'}</Text>
-              </View>
-              <Text style={styles.institution}>{edu.institution}{edu.location ? `, ${edu.location}` : ''}</Text>
-              {edu.description && (
-                <View style={styles.bulletContainer}>
-                  <View style={styles.bulletPoint} />
-                  <Text style={styles.description}>{edu.description}</Text>
-                </View>
-              )}
+          </View>
+          
+          {processedPhoto && (
+            <View style={styles.photoContainer}>
+              <Image 
+                src={processedPhoto} 
+                style={styles.photo} 
+                cache={false}
+              />
             </View>
-          ))}
+          )}
         </View>
-      )}
 
-      {/* Sección de Habilidades */}
-      {data.skills && data.skills.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Habilidades</Text>
-          <View style={styles.skills}>
-            {data.skills.map((skill, index) => (
-              <Text key={index} style={styles.skill}>
-                {skill}
-              </Text>
+        {/* Perfil Profesional */}
+        {data.personalInfo.summary && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Perfil Profesional</Text>
+            <Text style={styles.summary}>{data.personalInfo.summary}</Text>
+          </View>
+        )}
+
+        {/* Sección de Experiencia */}
+        {data.experience && data.experience.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Experiencia Profesional</Text>
+            {data.experience.map((exp, index) => (
+              <View key={index} style={styles.experienceItem}>
+                <View style={styles.experienceHeader}>
+                  <Text style={styles.jobTitle}>{exp.position}</Text>
+                  <Text style={styles.jobPeriod}>{exp.startDate} - {exp.endDate || 'Presente'}</Text>
+                </View>
+                <Text style={styles.company}>{exp.company}{exp.location ? `, ${exp.location}` : ''}</Text>
+                
+                {exp.description && (
+                  <View style={styles.bulletContainer}>
+                    <View style={styles.bulletPoint} />
+                    <Text style={styles.description}>{exp.description}</Text>
+                  </View>
+                )}
+              </View>
             ))}
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Pie de página */}
-      <View style={styles.footer}>
-        <Text>Currículum actualizado a {new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}</Text>
-      </View>
-    </Page>
-  </Document>
-);
+        {/* Sección de Educación */}
+        {data.education && data.education.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Formación Académica</Text>
+            {data.education.map((edu, index) => (
+              <View key={index} style={styles.educationItem}>
+                <View style={styles.experienceHeader}>
+                  <Text style={styles.degree}>{edu.degree}</Text>
+                  <Text style={styles.educationPeriod}>{edu.startDate} - {edu.endDate || 'Presente'}</Text>
+                </View>
+                <Text style={styles.institution}>{edu.institution}{edu.location ? `, ${edu.location}` : ''}</Text>
+                {edu.description && (
+                  <View style={styles.bulletContainer}>
+                    <View style={styles.bulletPoint} />
+                    <Text style={styles.description}>{edu.description}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Sección de Habilidades */}
+        {data.skills && data.skills.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Habilidades</Text>
+            <View style={styles.skills}>
+              {data.skills.map((skill, index) => (
+                <Text key={index} style={styles.skill}>
+                  {skill}
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Pie de página */}
+        <View style={styles.footer}>
+          <Text>Currículum actualizado a {new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}</Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
 
 export default ChronologicalTemplate; 

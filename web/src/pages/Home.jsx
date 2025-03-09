@@ -28,6 +28,12 @@ const Home = () => {
                 >
                   Mis Currículums
                 </Link>
+                <Link
+                  to="/import-cv"
+                  className="btn-secondary"
+                >
+                  Importar CV de Axel
+                </Link>
               </div>
             </div>
             <div className="relative w-full max-w-md">
